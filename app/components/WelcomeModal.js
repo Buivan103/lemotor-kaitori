@@ -6,13 +6,13 @@ export default function WelcomeModal() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setOpen(true), 600);
+    const t = setTimeout(() => setOpen(true), 400);
     return () => clearTimeout(t);
   }, []);
 
   if (!open) return null;
 
-  const scrollToForm = () => {
+  const goForm = () => {
     setOpen(false);
     document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
   };
@@ -20,15 +20,30 @@ export default function WelcomeModal() {
   return (
     <div className="modal-overlay" onClick={() => setOpen(false)}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="modal__promo">対象者全員にデジタルギフト券20,000円分！</div>
-        <p className="modal__q">
-          ご希望に沿った提案を致します。<br />あなたはどちらですか？
-        </p>
-        <div className="modal__buttons">
-          <button className="modal__btn" onClick={scrollToForm}>不要な車がある</button>
-          <button className="modal__btn" onClick={scrollToForm}>乗換を検討中</button>
+        <div className="modal__campaign">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/campaign/digico_820.png" alt="対象者全員にデジタルギフト券20,000円分！" />
         </div>
-        <button className="modal__skip" onClick={() => setOpen(false)}>
+        <div className="modal__body">
+          <div className="modal__operator">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/icons/image_nav.png" alt="" />
+            <p>
+              ご希望に沿った提案を致します。
+              <br />
+              あなたはどちらですか？
+            </p>
+          </div>
+        </div>
+        <div className="modal__buttons">
+          <button type="button" className="modal__btn" onClick={goForm}>
+            不要な車がある
+          </button>
+          <button type="button" className="modal__btn" onClick={goForm}>
+            乗換を検討中
+          </button>
+        </div>
+        <button type="button" className="modal__skip" onClick={() => setOpen(false)}>
           提案は必要ない
         </button>
       </div>

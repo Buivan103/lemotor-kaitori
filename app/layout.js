@@ -1,12 +1,4 @@
 import "./globals.css";
-import { Noto_Sans_JP } from "next/font/google";
-
-const notoSansJP = Noto_Sans_JP({
-  subsets: ["latin"],
-  weight: ["400", "500", "700", "900"],
-  display: "swap",
-  variable: "--font-noto",
-});
 
 export const metadata = {
   title: "車の買取・事故車や廃車の査定なら【セルトレ】",
@@ -23,7 +15,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="ja" className={notoSansJP.variable}>
+    <html lang="ja">
       <body>{children}</body>
     </html>
   );

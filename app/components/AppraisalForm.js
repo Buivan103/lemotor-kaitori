@@ -16,6 +16,7 @@ const empty = {
   modelCode: "",
   modelName: "",
   year: "",
+  yearLabel: "",
   mileage: "",
   carStatus: 1,
   sellingTime: 3,
@@ -83,11 +84,8 @@ export default function AppraisalForm() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "送信に失敗しました。");
-      } else {
-        setResult(data);
-      }
+      if (!res.ok) setError(data.error || "送信に失敗しました。");
+      else setResult(data);
     } catch {
       setError("通信エラーが発生しました。");
     } finally {
@@ -98,17 +96,17 @@ export default function AppraisalForm() {
   if (result) {
     return (
       <div className="result">
-        <div className="result__badge">🎉</div>
         <h2>査定依頼を受け付けました</h2>
         <p className="result__price">
           {form.makerName} {form.modelName} の相場価格は
           <b>{result.estimate.min}</b>~<b>{result.estimate.max}</b>万円です
         </p>
-        <p className="hint">
+        <p className="hint" style={{ gridColumn: "auto", marginTop: 8 }}>
           ※当社にて独自算出した相場価格です。買取価格を保証するものではありません。
         </p>
         <p style={{ marginTop: 16 }}>担当より順次ご連絡いたします。（受付番号 #{result.id}）</p>
         <button
+          type="button"
           className="btn-back"
           onClick={() => {
             setForm(empty);
@@ -124,22 +122,24 @@ export default function AppraisalForm() {
 
   return (
     <div>
-      <div className="formcard__head">
-        <h2>買取・査定をする車両の情報を入力ください</h2>
-        <span className="formcard__timer">29秒で入力完了！愛車の査定、承ります。</span>
-      </div>
-
-      <div className="steps-indicator">
-        <span className={step >= 1 ? "on" : ""} />
-        <span className={step >= 2 ? "on" : ""} />
-        <span className={step >= 3 ? "on" : ""} />
+      <div className="chat-operator">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="chat-operator__img" src="/assets/icons/image_nav.png" alt="" />
+        <div className="chat-operator__text">
+          {step === 1 && "29秒で入力完了！愛車の査定、承ります。"}
+          {step === 2 && "お客様情報が一般に公開されることはありません。"}
+          {step === 3 && "入力された電話番号はご本人様確認のため利用いたします。"}
+        </div>
       </div>
 
       {step === 1 && (
         <>
-          <div className="field">
-            <div className="field__label">
-              メーカー <span className={"req" + (form.makerCode ? " ok" : "")}>{form.makerCode ? "OK" : "必須"}</span>
+          <div className="form-row">
+            <div className="form-label">
+              メーカー
+              <span className={"req" + (form.makerCode ? " ok" : "")}>
+                {form.makerCode ? "OK" : "必須"}
+              </span>
             </div>
             <select
               className="control"
@@ -160,9 +160,12 @@ export default function AppraisalForm() {
             </select>
           </div>
 
-          <div className="field">
-            <div className="field__label">
-              車種 <span className={"req" + (form.modelCode ? " ok" : "")}>{form.modelCode ? "OK" : "任意"}</span>
+          <div className="form-row">
+            <div className="form-label">
+              車種
+              <span className={"req" + (form.modelCode ? " ok" : " opt")}>
+                {form.modelCode ? "OK" : "任意"}
+              </span>
             </div>
             <select
               className="control"
@@ -177,26 +180,38 @@ export default function AppraisalForm() {
             </select>
           </div>
 
-          <div className="field">
-            <div className="field__label">
-              年式 <span className={"req" + (form.year ? " ok" : "")}>{form.year ? "OK" : "必須"}</span>
+          <div className="form-row">
+            <div className="form-label">
+              年式
+              <span className={"req" + (form.year ? " ok" : "")}>
+                {form.year ? "OK" : "必須"}
+              </span>
             </div>
             <select
               className="control"
-              value={form.year}
-              onChange={(e) => set({ year: e.target.value.match(/^\d{4}/)?.[0] || e.target.value, })}
+              value={form.yearLabel}
+              onChange={(e) => {
+                const label = e.target.value;
+                set({
+                  yearLabel: label,
+                  year: label.match(/^\d{4}/)?.[0] || label,
+                });
+              }}
             >
               <option value="">選択してください</option>
               {YEARS.map((y) => (
-                <option key={y} value={y.match(/^\d{4}/)?.[0] || y}>{y}</option>
+                <option key={y} value={y}>{y}</option>
               ))}
             </select>
-            <div className="hint">不明の場合はだいたいでOK</div>
           </div>
+          <div className="hint">不明の場合はだいたいでOK</div>
 
-          <div className="field">
-            <div className="field__label">
-              走行距離 <span className={"req" + (form.mileage ? " ok" : "")}>{form.mileage ? "OK" : "必須"}</span>
+          <div className="form-row">
+            <div className="form-label">
+              走行距離
+              <span className={"req" + (form.mileage ? " ok" : "")}>
+                {form.mileage ? "OK" : "必須"}
+              </span>
             </div>
             <select
               className="control"
@@ -208,71 +223,98 @@ export default function AppraisalForm() {
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
-            <div className="hint">不明の場合はだいたいでOK</div>
           </div>
+          <div className="hint">不明の場合はだいたいでOK</div>
 
-          <div className="field">
-            <div className="field__label">車の状態</div>
+          <div className="form-row">
+            <div className="form-label">
+              車の状態 <span className="req ok">OK</span>
+            </div>
             <div className="radios">
               {CAR_STATUS.map((s) => (
                 <div
                   key={s.value}
-                  className={"radio-pill" + (form.carStatus === s.value ? " on" : "")}
+                  className={"radio" + (form.carStatus === s.value ? " on" : "")}
                   onClick={() => set({ carStatus: s.value })}
                 >
+                  <input
+                    type="radio"
+                    checked={form.carStatus === s.value}
+                    onChange={() => set({ carStatus: s.value })}
+                  />
                   {s.label}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="field">
-            <div className="field__label">売却希望時期</div>
+          <div className="form-row">
+            <div className="form-label">
+              売却希望時期 <span className="req ok">OK</span>
+            </div>
             <div className="radios">
               {SELLING_TIME.map((s) => (
                 <div
                   key={s.value}
-                  className={"radio-pill" + (form.sellingTime === s.value ? " on" : "")}
+                  className={"radio" + (form.sellingTime === s.value ? " on" : "")}
                   onClick={() => set({ sellingTime: s.value })}
                 >
+                  <input
+                    type="radio"
+                    checked={form.sellingTime === s.value}
+                    onChange={() => set({ sellingTime: s.value })}
+                  />
                   {s.label}
                 </div>
               ))}
             </div>
           </div>
 
-          <button className="btn-next" disabled={!step1Valid} onClick={() => setStep(2)}>
-            <small>無料</small>次へ (29秒で完了)
+          <button
+            type="button"
+            className="btn-submit"
+            disabled={!step1Valid}
+            onClick={() => setStep(2)}
+          >
+            <span className="sub">無料</span>
+            次へ (29秒で完了)
           </button>
         </>
       )}
 
       {step === 2 && (
         <>
-          <p className="hint">お客様情報が一般に公開されることはありません。</p>
-          <div className="field">
-            <div className="field__label">
-              お名前 <span className={"req" + (step2Valid ? " ok" : "")}>必須</span>
+          <div className="form-row">
+            <div className="form-label">
+              お名前
+              <span className={"req" + (step2Valid ? " ok" : "")}>必須</span>
             </div>
-            <div className="grid-2">
+            <div className="name-row">
+              <span>姓</span>
               <input
                 className="control"
-                placeholder="姓"
                 value={form.lastName}
                 onChange={(e) => set({ lastName: e.target.value })}
               />
+              <span>名</span>
               <input
                 className="control"
-                placeholder="名"
                 value={form.firstName}
                 onChange={(e) => set({ firstName: e.target.value })}
               />
             </div>
           </div>
 
-          <div className="field">
-            <div className="field__label">
-              都道府県 <span className={"req" + (form.prefecture ? " ok" : "")}>必須</span>
+          <div className="chat-operator">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="chat-operator__img" src="/assets/icons/image_nav.png" alt="" />
+            <div className="chat-operator__text">近隣エリアの優良買取店をご紹介します !</div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              都道府県
+              <span className={"req" + (form.prefecture ? " ok" : "")}>必須</span>
             </div>
             <select
               className="control"
@@ -286,52 +328,60 @@ export default function AppraisalForm() {
             </select>
           </div>
 
-          <div className="grid-2">
-            <div className="field">
-              <div className="field__label">市区町村</div>
-              <input
-                className="control"
-                placeholder="市区町村"
-                value={form.city}
-                onChange={(e) => set({ city: e.target.value })}
-              />
-            </div>
-            <div className="field">
-              <div className="field__label">郵便番号</div>
-              <input
-                className="control"
-                placeholder="ハイフン不要"
-                value={form.zipcode}
-                onChange={(e) => set({ zipcode: e.target.value })}
-              />
-            </div>
+          <div className="form-row">
+            <div className="form-label">市区町村</div>
+            <input
+              className="control"
+              placeholder="市区町村"
+              value={form.city}
+              onChange={(e) => set({ city: e.target.value })}
+            />
           </div>
 
-          <button className="btn-next" disabled={!step2Valid} onClick={() => setStep(3)}>
-            <small>無料</small>次に進む
+          <div className="form-row">
+            <div className="form-label">郵便番号</div>
+            <input
+              className="control"
+              placeholder="ハイフン不要"
+              value={form.zipcode}
+              onChange={(e) => set({ zipcode: e.target.value })}
+            />
+          </div>
+
+          <button
+            type="button"
+            className="btn-submit"
+            disabled={!step2Valid}
+            onClick={() => setStep(3)}
+          >
+            <span className="sub">無料</span>
+            次に進む
           </button>
-          <button className="btn-back" onClick={() => setStep(1)}>戻る</button>
+          <button type="button" className="btn-back" onClick={() => setStep(1)}>
+            戻る
+          </button>
         </>
       )}
 
       {step === 3 && (
         <>
-          <div className="field">
-            <div className="field__label">
-              メールアドレス <span className={"req" + (form.email ? " ok" : "")}>必須</span>
+          <div className="form-row">
+            <div className="form-label">
+              メールアドレス
+              <span className={"req" + (form.email ? " ok" : "")}>必須</span>
             </div>
             <input
               type="email"
               className="control"
-              placeholder="example@mail.com"
               value={form.email}
               onChange={(e) => set({ email: e.target.value })}
             />
           </div>
 
-          <div className="field">
-            <div className="field__label">
-              電話番号 <span className={"req" + (form.tel ? " ok" : "")}>必須</span>
+          <div className="form-row">
+            <div className="form-label">
+              電話番号
+              <span className={"req" + (form.tel ? " ok" : "")}>必須</span>
             </div>
             <input
               type="tel"
@@ -342,40 +392,61 @@ export default function AppraisalForm() {
             />
           </div>
 
-          <div className="field">
-            <div className="field__label">
-              希望連絡時間帯 <span className={"req" + (form.contactTime ? " ok" : "")}>必須</span>
+          <div className="form-row">
+            <div className="form-label">
+              希望連絡時間帯
+              <span className={"req" + (form.contactTime ? " ok" : "")}>必須</span>
             </div>
             <div className="radios">
               {CONTACT_TIME.map((c) => (
                 <div
                   key={c.value}
-                  className={"radio-pill" + (form.contactTime === c.value ? " on" : "")}
+                  className={"radio" + (form.contactTime === c.value ? " on" : "")}
                   onClick={() => set({ contactTime: c.value })}
                 >
+                  <input
+                    type="radio"
+                    checked={form.contactTime === c.value}
+                    onChange={() => set({ contactTime: c.value })}
+                  />
                   {c.label}
                 </div>
               ))}
             </div>
           </div>
 
-          {error && <p style={{ color: "var(--red)", fontSize: 14 }}>{error}</p>}
+          {error && (
+            <p style={{ color: "var(--red)", fontSize: 14, textAlign: "center" }}>{error}</p>
+          )}
 
-          <button className="btn-next" disabled={!step3Valid || submitting} onClick={submit}>
-            <small>無料</small>{submitting ? "送信中..." : "査定額を見る"}
+          <button
+            type="button"
+            className="btn-submit"
+            disabled={!step3Valid || submitting}
+            onClick={submit}
+          >
+            <span className="sub">無料</span>
+            {submitting ? "送信中..." : "査定額を見る"}
           </button>
-          <button className="btn-back" onClick={() => setStep(2)}>戻る</button>
-
-          <div className="protect">
-            <span>🔒</span>
-            <span>ご利用により個人情報が許可なく公開されることはございません。</span>
-          </div>
+          <button type="button" className="btn-back" onClick={() => setStep(2)}>
+            戻る
+          </button>
         </>
       )}
 
       <p className="form-note">
-        お問い合わせ後、ご入力いただいた番号宛に買取業者より査定案内の連絡があります。
+        お問い合わせ後、ご入力いただいた番号宛に買取業者より査定案内の電話があります。
       </p>
+
+      <div className="protect">
+        <span>🔒 個人情報が許可なく公開されることはございません。</span>
+        <span>🏅 東証プライム上場グループ運営</span>
+      </div>
+
+      <div className="campaign" style={{ paddingTop: 20 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/campaign/digico_820.png" alt="対象者全員にデジタルギフト券20,000円分！" />
+      </div>
     </div>
   );
 }
