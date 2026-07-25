@@ -1,20 +1,42 @@
 import { NextResponse } from "next/server";
 import { digitsOnlyPhone, isValidJapanesePhone } from "@/lib/phone";
+import { isValidEmail, normalizeEmail } from "@/lib/email";
 import { appendInquiryToSheet, buildSheetRow } from "@/lib/google-sheets";
 import { estimateMarketPrice } from "@/lib/estimate";
+import {
+  checkInquirySpam,
+  recordInquirySpamHit,
+} from "@/lib/anti-spam";
 
 function newInquiryId() {
   return `LM-${Date.now().toString(36).toUpperCase()}`;
+}
+
+function clientIp(request) {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    null
+  );
 }
 
 // POST /api/inquiries -> estimate + append lead to Google Sheet
 export async function POST(request) {
   try {
     const body = await request.json();
+    const ip = clientIp(request);
+    const userAgent = request.headers.get("user-agent") || null;
 
     if (!body.makerCode && !body.makerName) {
       return NextResponse.json(
         { error: "メーカーを選択してください" },
+        { status: 422 }
+      );
+    }
+
+    if (!isValidEmail(body.email)) {
+      return NextResponse.json(
+        { error: "正しいメールアドレスを入力してください" },
         { status: 422 }
       );
     }
@@ -26,7 +48,39 @@ export async function POST(request) {
       );
     }
 
+    const email = normalizeEmail(body.email);
     const tel = digitsOnlyPhone(body.tel);
+    body.email = email;
+
+    // Honeypot: bots that fill hidden "website" — pretend OK, do not write Sheet.
+    const spam = checkInquirySpam({
+      ip,
+      tel,
+      honeypot: body.website ?? body.companyUrl ?? "",
+    });
+    if (!spam.ok) {
+      if (spam.reason === "honeypot") {
+        const { min, max } = estimateMarketPrice({
+          makerCode: body.makerCode,
+          modelName: body.modelName,
+          year: body.year,
+          mileage: body.mileage,
+          carStatus: Number(body.carStatus ?? 1),
+          grade: body.grade,
+          color: body.color,
+        });
+        return NextResponse.json(
+          {
+            ok: true,
+            id: newInquiryId(),
+            estimate: { min, max },
+            message: "査定依頼を受け付けました。担当より順次ご連絡いたします。",
+          },
+          { status: 201 }
+        );
+      }
+      return NextResponse.json({ error: spam.error }, { status: 429 });
+    }
 
     const carStatus = Number(body.carStatus ?? 1);
 
@@ -41,9 +95,6 @@ export async function POST(request) {
     });
 
     const id = newInquiryId();
-    const ip =
-      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
-    const userAgent = request.headers.get("user-agent") || null;
 
     const row = buildSheetRow({
       body,
@@ -70,6 +121,8 @@ export async function POST(request) {
         row
       );
     }
+
+    recordInquirySpamHit({ ip, tel });
 
     return NextResponse.json(
       {

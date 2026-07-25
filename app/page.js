@@ -50,7 +50,7 @@ export default async function Home() {
         </div>
       </header>
 
-      <div className="mobile-fixed-footer">
+      <div className="mobile-fixed-footer home-hide-on-result">
         <a className="mobile-fixed-footer__cta" href="#form">
           <span className="mobile-fixed-footer__bubble">
             対象者全員にキャッシュバック2,000円！
@@ -63,7 +63,7 @@ export default async function Home() {
       </div>
 
       {/* Keyvisual + good-deal — sell.tc-v.com mobile structure */}
-      <div className="hero-block">
+      <div className="hero-block home-hide-on-result">
         <picture>
           <source
             media="(max-width: 820px)"
@@ -125,7 +125,7 @@ export default async function Home() {
         />
       </div>
 
-      <div className="form-titlebar" id="form">
+      <div className="form-titlebar home-hide-on-result" id="form">
         <h2>買取・査定をする車両の情報を入力ください</h2>
       </div>
 
@@ -133,6 +133,7 @@ export default async function Home() {
         <AppraisalForm />
       </div>
 
+      <div className="home-hide-on-result">
       <section className="process" id="process">
         <div className="process__header">
           <h2>「オールインワン査定」で楽々売却！</h2>
@@ -599,6 +600,7 @@ export default async function Home() {
           </div>
         </div>
       </footer>
+      </div>
     </>
   );
 }

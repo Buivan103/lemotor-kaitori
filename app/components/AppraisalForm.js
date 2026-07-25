@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   YEARS,
   MILEAGES,
@@ -11,6 +11,7 @@ import {
   COLORS,
 } from "@/lib/constants";
 import { isValidJapanesePhone, normalizeJapanesePhone } from "@/lib/phone";
+import { isValidEmail, normalizeEmail } from "@/lib/email";
 
 const empty = {
   makerCode: "",
@@ -33,6 +34,7 @@ const empty = {
   email: "",
   tel: "",
   contactTime: "",
+  website: "", // honeypot — must stay empty
 };
 
 const WIZARD_STEPS = ["maker", "model", "year", "grade", "mileage", "color"];
@@ -64,11 +66,13 @@ function CarWizard({
   onPickColor,
 }) {
   useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
+    if (!open) {
+      document.body.style.overflow = "";
+      return;
+    }
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = "";
     };
   }, [open]);
 
@@ -327,6 +331,7 @@ export default function AppraisalForm() {
   const [models, setModels] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const resultRef = useRef(null);
   const [error, setError] = useState("");
   const [wizardStep, setWizardStep] = useState(null);
   const [otherDomesticOpen, setOtherDomesticOpen] = useState(false);
@@ -356,11 +361,13 @@ export default function AppraisalForm() {
   }, [form.makerCode]);
 
   useEffect(() => {
-    if (!addressPicker && !contactOpen) return;
-    const prev = document.body.style.overflow;
+    if (!addressPicker && !contactOpen) {
+      document.body.style.overflow = "";
+      return;
+    }
     document.body.style.overflow = "hidden";
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = "";
     };
   }, [addressPicker, contactOpen]);
 
@@ -381,7 +388,8 @@ export default function AppraisalForm() {
     form.prefecture &&
     form.city;
   const telValid = isValidJapanesePhone(form.tel);
-  const step2Valid = Boolean(form.email && telValid);
+  const emailValid = isValidEmail(form.email);
+  const step2Valid = Boolean(emailValid && telValid);
 
   const carLabel = form.modelName || form.makerName || "愛車";
   const makerModelLabel =
@@ -525,8 +533,16 @@ export default function AppraisalForm() {
         body: JSON.stringify(form),
       });
       const data = await res.json();
-      if (!res.ok) setError(data.error || "送信に失敗しました。");
-      else setResult(data);
+      if (!res.ok) {
+        setError(data.error || "送信に失敗しました。");
+        return;
+      }
+      // Close overlay first so the result at #form is visible (not buried under home).
+      setContactOpen(false);
+      setAddressPicker(null);
+      setWizardStep(null);
+      document.body.style.overflow = "";
+      setResult(data);
     } catch {
       setError("通信エラーが発生しました。");
     } finally {
@@ -534,18 +550,50 @@ export default function AppraisalForm() {
     }
   };
 
+  useEffect(() => {
+    document.body.classList.toggle("is-result-view", Boolean(result));
+    return () => document.body.classList.remove("is-result-view");
+  }, [result]);
+
+  useEffect(() => {
+    if (!result) return;
+    document.body.style.overflow = "";
+    document.documentElement.style.overflow = "";
+    const id = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [result]);
+
   if (result) {
     return (
-      <div className="result">
-        <h2>査定依頼を受け付けました</h2>
-        <p className="result__price">
-          {form.makerName} {form.modelName} の相場価格は
-          <b>{result.estimate.min}</b>~<b>{result.estimate.max}</b>万円です
-        </p>
-        <p className="hint" style={{ gridColumn: "auto", marginTop: 8 }}>
-          ※当社にて独自算出した相場価格です。買取価格を保証するものではありません。
-        </p>
-        <p style={{ marginTop: 16 }}>担当より順次ご連絡いたします。（受付番号 #{result.id}）</p>
+      <div className="result" ref={resultRef}>
+        <p className="result__badge">査定依頼を受け付けました</p>
+
+        <div className="result__card">
+          <p className="result__car">
+            {form.makerName} {form.modelName}
+            {form.yearLabel ? `（${form.yearLabel}）` : ""}
+          </p>
+          <p className="result__label">＼ あなたの愛車の相場価格 ／</p>
+          <p className="result__price">
+            <b>{result.estimate.min}</b>
+            <span className="result__tilde">〜</span>
+            <b>{result.estimate.max}</b>
+            <span className="result__unit">万円</span>
+          </p>
+          <p className="result__note">
+            ※当社にて独自算出した相場価格です。買取価格を保証するものではありません。
+          </p>
+        </div>
+
+        <p className="result__lead">担当より順次ご連絡いたします。</p>
+
+        <a className="result__call" href="tel:09091563524">
+          <span className="result__call-label">お急ぎの方はお電話ください</span>
+          <span className="result__call-number">📞 090-9156-3524</span>
+        </a>
+
         <button
           type="button"
           className="btn-back"
@@ -554,6 +602,13 @@ export default function AppraisalForm() {
             setStep(1);
             setContactOpen(false);
             setResult(null);
+            document.body.classList.remove("is-result-view");
+            requestAnimationFrame(() => {
+              document.getElementById("form")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            });
           }}
         >
           最初からやり直す
@@ -965,6 +1020,20 @@ export default function AppraisalForm() {
                 />
               </div>
 
+              {/* Honeypot — leave empty; bots that autofill get rejected server-side */}
+              <div className="hp-field" aria-hidden="true">
+                <label htmlFor="contact-website">ウェブサイト</label>
+                <input
+                  id="contact-website"
+                  type="text"
+                  name="website"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={form.website}
+                  onChange={(e) => set({ website: e.target.value })}
+                />
+              </div>
+
               <div className="chat-operator contact-modal__operator">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img className="chat-operator__img" src="/assets/icons/image_nav.png" alt="" />
@@ -978,8 +1047,8 @@ export default function AppraisalForm() {
               <div className="contact-modal__field">
                 <label className="contact-modal__label" htmlFor="contact-email">
                   メールアドレス
-                  <span className={"req" + (form.email ? " ok" : "")}>
-                    {form.email ? "OK" : "必須"}
+                  <span className={"req" + (emailValid ? " ok" : "")}>
+                    {emailValid ? "OK" : "必須"}
                   </span>
                 </label>
                 <input
@@ -987,9 +1056,15 @@ export default function AppraisalForm() {
                   type="email"
                   className="control"
                   value={form.email}
-                  onChange={(e) => set({ email: e.target.value })}
+                  onChange={(e) => set({ email: normalizeEmail(e.target.value) })}
                   autoComplete="email"
+                  inputMode="email"
                 />
+                {form.email && !emailValid && (
+                  <p className="contact-modal__hint contact-modal__hint--error">
+                    正しいメールアドレスを入力してください（例: name@example.com）
+                  </p>
+                )}
               </div>
 
               <div className="contact-modal__field">
