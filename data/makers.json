@@ -1,0 +1,26 @@
+{
+  "domestic": [
+    { "code": "MLEJ", "name": "レクサス", "sortOrder": 0 },
+    { "code": "MTOJ", "name": "トヨタ", "sortOrder": 1 },
+    { "code": "MNIJ", "name": "日産", "sortOrder": 2 },
+    { "code": "MHOJ", "name": "ホンダ", "sortOrder": 3 },
+    { "code": "MMAJ", "name": "マツダ", "sortOrder": 4 },
+    { "code": "MSBJ", "name": "スバル", "sortOrder": 5 },
+    { "code": "MSZJ", "name": "スズキ", "sortOrder": 6 },
+    { "code": "MMIJ", "name": "三菱", "sortOrder": 7 },
+    { "code": "MDAJ", "name": "ダイハツ", "sortOrder": 8 },
+    { "code": "MISJ", "name": "いすゞ", "sortOrder": 9 }
+  ],
+  "imported": [
+    { "code": "MMEG", "name": "メルセデス・ベンツ", "sortOrder": 0 },
+    { "code": "MVWG", "name": "フォルクスワーゲン", "sortOrder": 1 },
+    { "code": "MBMG", "name": "BMW", "sortOrder": 2 },
+    { "code": "MADG", "name": "アウディ", "sortOrder": 3 },
+    { "code": "MPOG", "name": "ポルシェ", "sortOrder": 4 },
+    { "code": "MMNG", "name": "ミニ", "sortOrder": 5 },
+    { "code": "MVOS", "name": "ボルボ", "sortOrder": 6 },
+    { "code": "MPEF", "name": "プジョー", "sortOrder": 7 },
+    { "code": "MFTI", "name": "フィアット", "sortOrder": 8 },
+    { "code": "MTSU", "name": "テスラ", "sortOrder": 9 }
+  ]
+}

@@ -1,66 +1,47 @@
-# セルトレ Clone — SELL AND TRADE
+# Le Motor — 車買取・査定ランディング
 
-A clone of the car buyout / appraisal landing page at [sell.tc-v.com](https://sell.tc-v.com/), rebuilt with **Next.js (App Router)** + **Prisma** + **SQLite**.
+Appraisal / buyout landing page for **Le Motor** ([lemotor.jp](https://lemotor.jp/)), built with **Next.js (App Router)**.
 
-> The original site is a Ruby on Rails app backed by a database (it persists appraisal
-> "inquiries" via `POST /inquiries` and loads makers / car models / zip codes through
-> ajax endpoints). **Yes, it uses a database**, so this clone includes one too.
+Vehicle catalogs live in JSON under `data/`. Inquiry leads are appended to a **Google Spreadsheet** after the customer submits and sees the estimate.
 
 ## Features
 
-- Orange-gradient hero + welcome modal that mirror the original design.
-- Multi-step appraisal form (STEP 1 vehicle info → STEP 2 customer → STEP 3 contact).
-- Live market-price estimate on submit ("独自算出した相場価格").
-- **Database-backed**: makers, car models, recent-applications ticker, and captured leads.
-- Simple admin view at `/admin` to confirm leads are stored.
-
-## Tech stack
-
-| Layer     | Choice                        |
-| --------- | ----------------------------- |
-| Framework | Next.js 14 (App Router)       |
-| Database  | SQLite (via Prisma ORM)       |
-| API       | Next.js Route Handlers        |
-
-## Data model (`prisma/schema.prisma`)
-
-- `Maker` — car manufacturers (国産車 / 輸入車), keyed by the real site's codes.
-- `CarModel` — models belonging to a maker.
-- `Inquiry` — the core lead table (vehicle + customer + contact + estimate).
-- `Application` — the public "全国からお申し込みが続々" ticker.
+- Le Motor branded header, hero, modal, and footer
+- Multi-step appraisal form (vehicle → customer → contact)
+- Market-price estimate on submit
+- Static makers / models / applications ticker from `data/*.json`
+- Leads → Google Sheets via Apps Script webhook
 
 ## Getting started
 
 ```bash
-# 1. install deps
 npm install
-
-# 2. set up env (SQLite file)
 cp .env.example .env
-
-# 3. create the database schema
-npm run db:push
-
-# 4. seed makers / models / demo data
-npm run db:seed
-
-# 5. run
+# Set GOOGLE_SHEETS_WEBHOOK_URL after deploying the Apps Script (optional in local dev)
 npm run dev
 ```
 
-Open http://localhost:3000 — and http://localhost:3000/admin to see stored leads.
+Open http://localhost:3000
 
-## API endpoints
+### Google Sheet setup
 
-| Method | Path                          | Purpose                       |
-| ------ | ----------------------------- | ----------------------------- |
-| GET    | `/api/makers`                 | Makers grouped by category    |
-| GET    | `/api/car-models?maker=MTOJ`  | Models for a maker            |
-| GET    | `/api/applications`           | Recent applications ticker    |
-| POST   | `/api/inquiries`              | Create an appraisal lead      |
-| GET    | `/api/inquiries`              | List latest leads (admin)     |
+1. Create a spreadsheet (optional sheet name: `査定依頼`) with header row matching `lib/google-sheets.js`.
+2. Paste `scripts/google-sheets-apps-script.js` into Extensions → Apps Script.
+3. Deploy as Web app (Execute as: Me, Who has access: Anyone).
+4. Put the URL in `.env` as `GOOGLE_SHEETS_WEBHOOK_URL`.
 
-## Notes
+Without the URL, local `npm run dev` still shows estimates and logs the lead to the console. Production requires the webhook.
 
-This is an educational clone. It does not send SMS, place phone calls, or share data
-with third-party buyout companies like the original service does.
+## Data files
+
+| File | Purpose |
+|------|---------|
+| `data/makers.json` | Domestic / imported makers |
+| `data/car-models.json` | Models keyed by maker code |
+| `data/applications.json` | Recent applications ticker |
+
+## Contact (from lemotor.jp)
+
+- TEL: 090-9156-3524
+- Email: lemotor.jp@gmail.com
+- Site: https://lemotor.jp/

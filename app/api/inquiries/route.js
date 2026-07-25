@@ -1,31 +1,13 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { digitsOnlyPhone, isValidJapanesePhone } from "@/lib/phone";
+import { appendInquiryToSheet, buildSheetRow } from "@/lib/google-sheets";
+import { estimateMarketPrice } from "@/lib/estimate";
 
-// Very rough market-price estimator (万円). Purely illustrative, like the
-// "独自算出した相場価格" the real site shows.
-function estimate({ makerCode, year, mileage, carStatus }) {
-  let base = 80; // 万円
-  const y = year ? parseInt(year, 10) : NaN;
-  if (!Number.isNaN(y)) base = Math.max(5, base - (2026 - y) * 6);
-
-  const mIdx = mileage ? parseInt(mileage, 10) : 0; // first number in "50001～"
-  if (mIdx > 150000) base *= 0.4;
-  else if (mIdx > 100000) base *= 0.6;
-  else if (mIdx > 50000) base *= 0.8;
-
-  if (carStatus === 2) base *= 0.6;
-  if (carStatus === 3) base *= 0.35;
-  if (carStatus === 4) base *= 0.25;
-
-  const premium = ["MLEJ", "MMEG", "MBMG", "MPOG", "MADG"].includes(makerCode);
-  if (premium) base *= 1.6;
-
-  const min = Math.max(1, Math.round(base * 0.85));
-  const max = Math.max(min + 1, Math.round(base * 1.25));
-  return { min, max };
+function newInquiryId() {
+  return `LM-${Date.now().toString(36).toUpperCase()}`;
 }
 
-// POST /api/inquiries -> create a new appraisal request (lead)
+// POST /api/inquiries -> estimate + append lead to Google Sheet
 export async function POST(request) {
   try {
     const body = await request.json();
@@ -37,49 +19,62 @@ export async function POST(request) {
       );
     }
 
+    if (!isValidJapanesePhone(body.tel)) {
+      return NextResponse.json(
+        { error: "正しい日本の電話番号を入力してください" },
+        { status: 422 }
+      );
+    }
+
+    const tel = digitsOnlyPhone(body.tel);
+
     const carStatus = Number(body.carStatus ?? 1);
-    const mileageNum = body.mileage
-      ? parseInt(String(body.mileage).replace(/[^0-9]/g, ""), 10)
-      : 0;
-    const yearNum = body.year ? parseInt(String(body.year), 10) : null;
 
-    const { min, max } = estimate({
+    const { min, max } = estimateMarketPrice({
       makerCode: body.makerCode,
-      year: yearNum,
-      mileage: mileageNum,
+      modelName: body.modelName,
+      year: body.year,
+      mileage: body.mileage,
       carStatus,
+      grade: body.grade,
+      color: body.color,
     });
 
-    const inquiry = await prisma.inquiry.create({
-      data: {
-        makerCode: body.makerCode || null,
-        makerName: body.makerName || null,
-        modelCode: body.modelCode || null,
-        modelName: body.modelName || null,
-        year: body.year || null,
-        mileage: body.mileage || null,
-        carStatus,
-        sellingTime: Number(body.sellingTime ?? 3),
-        lastName: body.lastName || null,
-        firstName: body.firstName || null,
-        prefecture: body.prefecture || null,
-        city: body.city || null,
-        zipcode: body.zipcode || null,
-        email: body.email || null,
-        tel: body.tel || null,
-        contactTime: body.contactTime || null,
-        estimateMin: min,
-        estimateMax: max,
-        ipAddress:
-          request.headers.get("x-forwarded-for")?.split(",")[0] || null,
-        userAgent: request.headers.get("user-agent") || null,
-      },
+    const id = newInquiryId();
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+    const userAgent = request.headers.get("user-agent") || null;
+
+    const row = buildSheetRow({
+      body,
+      tel,
+      carStatus,
+      estimate: { min, max },
+      ip,
+      userAgent,
+      id,
     });
+
+    const webhook = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
+    if (webhook) {
+      await appendInquiryToSheet(row);
+    } else if (process.env.NODE_ENV === "production") {
+      console.error("GOOGLE_SHEETS_WEBHOOK_URL is missing in production");
+      return NextResponse.json(
+        { error: "送信に失敗しました。時間をおいて再度お試しください。" },
+        { status: 500 }
+      );
+    } else {
+      console.warn(
+        "[dev] GOOGLE_SHEETS_WEBHOOK_URL unset — lead not written to Sheet:",
+        row
+      );
+    }
 
     return NextResponse.json(
       {
         ok: true,
-        id: inquiry.id,
+        id,
         estimate: { min, max },
         message: "査定依頼を受け付けました。担当より順次ご連絡いたします。",
       },
@@ -94,11 +89,12 @@ export async function POST(request) {
   }
 }
 
-// GET /api/inquiries -> simple admin listing (latest leads)
+// GET /api/inquiries -> leads live in Google Sheet (no local list)
 export async function GET() {
-  const inquiries = await prisma.inquiry.findMany({
-    orderBy: { createdAt: "desc" },
-    take: 100,
+  return NextResponse.json({
+    count: 0,
+    inquiries: [],
+    message:
+      "査定依頼は Google スプレッドシートで管理します。GOOGLE_SHEETS_WEBHOOK_URL を設定してください。",
   });
-  return NextResponse.json({ count: inquiries.length, inquiries });
 }

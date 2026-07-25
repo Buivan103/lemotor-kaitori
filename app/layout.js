@@ -1,9 +1,9 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "車の買取・事故車や廃車の査定なら【セルトレ】",
+  title: "車の買取・査定なら【Le Motor】| 中古車の買取・販売",
   description:
-    "中古車や廃車の買取・査定ならセルトレ（SELL AND TRADE)。動かなくなった車や水没車・事故車でも、あなたの元愛車を買い取り査定します。",
+    "Le Motor（リモーター）は中古車の買取・査定・販売・修理・整備を行うオートショップです。事故車・故障車・不動車もお気軽にご相談ください。",
   robots: "index,follow",
 };
 

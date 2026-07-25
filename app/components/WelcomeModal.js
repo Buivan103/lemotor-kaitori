@@ -22,14 +22,14 @@ export default function WelcomeModal() {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__campaign">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/campaign/digico_820.png" alt="対象者全員にデジタルギフト券20,000円分！" />
+          <img src="/assets/campaign/lemotor_cashback.png" alt="対象者全員 キャッシュバック2,000円分がもらえる！ Le Motorからの申込限定" />
         </div>
         <div className="modal__body">
           <div className="modal__operator">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/assets/icons/image_nav.png" alt="" />
+            <img src="/assets/lemotor/logo.png" alt="" />
             <p>
-              ご希望に沿った提案を致します。
+              ご希望に沿ったご提案をいたします。
               <br />
               あなたはどちらですか？
             </p>

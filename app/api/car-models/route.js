@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { findMaker, getCarModelsByMaker } from "@/lib/car-data";
 
 // GET /api/car-models?maker=MTOJ -> models for a maker
 export async function GET(request) {
@@ -8,12 +8,10 @@ export async function GET(request) {
   if (!makerCode) {
     return NextResponse.json({ error: "maker is required" }, { status: 400 });
   }
-  const maker = await prisma.maker.findUnique({ where: { code: makerCode } });
+
+  const maker = findMaker(makerCode);
   if (!maker) return NextResponse.json({ models: [] });
 
-  const models = await prisma.carModel.findMany({
-    where: { makerId: maker.id },
-    orderBy: { id: "asc" },
-  });
+  const models = getCarModelsByMaker(makerCode);
   return NextResponse.json({ maker, models });
 }

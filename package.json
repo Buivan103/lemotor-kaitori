@@ -2,27 +2,16 @@
   "name": "sell-trade-clone",
   "version": "1.0.0",
   "private": true,
-  "description": "セルトレ (SELL AND TRADE) car buyout/appraisal landing page clone with database-backed inquiry capture.",
+  "description": "Le Motor car buyout/appraisal landing page with Google Sheets lead capture.",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "db:push": "prisma db push",
-    "db:seed": "node prisma/seed.mjs",
-    "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
-  },
-  "prisma": {
-    "seed": "node prisma/seed.mjs"
+    "lint": "next lint"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
-  },
-  "devDependencies": {
-    "prisma": "^5.22.0"
   }
 }

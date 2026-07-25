@@ -1,0 +1,377 @@
+{
+  "MTOJ": [
+    {
+      "code": "MTOJ-000",
+      "name": "アルファード"
+    },
+    {
+      "code": "MTOJ-001",
+      "name": "ヴェルファイア"
+    },
+    {
+      "code": "MTOJ-002",
+      "name": "ハリアー"
+    },
+    {
+      "code": "MTOJ-003",
+      "name": "プリウス"
+    },
+    {
+      "code": "MTOJ-004",
+      "name": "アクア"
+    },
+    {
+      "code": "MTOJ-005",
+      "name": "ヴォクシー"
+    },
+    {
+      "code": "MTOJ-006",
+      "name": "ノア"
+    },
+    {
+      "code": "MTOJ-007",
+      "name": "シエンタ"
+    },
+    {
+      "code": "MTOJ-008",
+      "name": "カローラ"
+    },
+    {
+      "code": "MTOJ-009",
+      "name": "ランドクルーザー"
+    }
+  ],
+  "MNIJ": [
+    {
+      "code": "MNIJ-000",
+      "name": "セレナ"
+    },
+    {
+      "code": "MNIJ-001",
+      "name": "ノート"
+    },
+    {
+      "code": "MNIJ-002",
+      "name": "エクストレイル"
+    },
+    {
+      "code": "MNIJ-003",
+      "name": "デイズ"
+    },
+    {
+      "code": "MNIJ-004",
+      "name": "ティアナ"
+    },
+    {
+      "code": "MNIJ-005",
+      "name": "モコ"
+    },
+    {
+      "code": "MNIJ-006",
+      "name": "マーチ"
+    },
+    {
+      "code": "MNIJ-007",
+      "name": "リーフ"
+    },
+    {
+      "code": "MNIJ-008",
+      "name": "エルグランド"
+    },
+    {
+      "code": "MNIJ-009",
+      "name": "スカイライン"
+    }
+  ],
+  "MHOJ": [
+    {
+      "code": "MHOJ-000",
+      "name": "N-BOX"
+    },
+    {
+      "code": "MHOJ-001",
+      "name": "フィット"
+    },
+    {
+      "code": "MHOJ-002",
+      "name": "フリード"
+    },
+    {
+      "code": "MHOJ-003",
+      "name": "ヴェゼル"
+    },
+    {
+      "code": "MHOJ-004",
+      "name": "ステップワゴン"
+    },
+    {
+      "code": "MHOJ-005",
+      "name": "オデッセイ"
+    },
+    {
+      "code": "MHOJ-006",
+      "name": "シビック"
+    },
+    {
+      "code": "MHOJ-007",
+      "name": "N-WGN"
+    },
+    {
+      "code": "MHOJ-008",
+      "name": "フィットハイブリッド"
+    }
+  ],
+  "MSZJ": [
+    {
+      "code": "MSZJ-000",
+      "name": "ワゴンR"
+    },
+    {
+      "code": "MSZJ-001",
+      "name": "アルト"
+    },
+    {
+      "code": "MSZJ-002",
+      "name": "スペーシア"
+    },
+    {
+      "code": "MSZJ-003",
+      "name": "ハスラー"
+    },
+    {
+      "code": "MSZJ-004",
+      "name": "ジムニー"
+    },
+    {
+      "code": "MSZJ-005",
+      "name": "スイフト"
+    },
+    {
+      "code": "MSZJ-006",
+      "name": "ソリオ"
+    },
+    {
+      "code": "MSZJ-007",
+      "name": "エブリイ"
+    }
+  ],
+  "MDAJ": [
+    {
+      "code": "MDAJ-000",
+      "name": "タント"
+    },
+    {
+      "code": "MDAJ-001",
+      "name": "ムーヴ"
+    },
+    {
+      "code": "MDAJ-002",
+      "name": "ミラ"
+    },
+    {
+      "code": "MDAJ-003",
+      "name": "ムーヴキャンバス"
+    },
+    {
+      "code": "MDAJ-004",
+      "name": "ロッキー"
+    },
+    {
+      "code": "MDAJ-005",
+      "name": "コペン"
+    },
+    {
+      "code": "MDAJ-006",
+      "name": "アトレーワゴン"
+    },
+    {
+      "code": "MDAJ-007",
+      "name": "ハイゼット"
+    }
+  ],
+  "MMAJ": [
+    {
+      "code": "MMAJ-000",
+      "name": "デミオ"
+    },
+    {
+      "code": "MMAJ-001",
+      "name": "CX-5"
+    },
+    {
+      "code": "MMAJ-002",
+      "name": "CX-3"
+    },
+    {
+      "code": "MMAJ-003",
+      "name": "アクセラ"
+    },
+    {
+      "code": "MMAJ-004",
+      "name": "ロードスター"
+    },
+    {
+      "code": "MMAJ-005",
+      "name": "キャロル"
+    },
+    {
+      "code": "MMAJ-006",
+      "name": "CX-8"
+    }
+  ],
+  "MSBJ": [
+    {
+      "code": "MSBJ-000",
+      "name": "インプレッサ"
+    },
+    {
+      "code": "MSBJ-001",
+      "name": "フォレスター"
+    },
+    {
+      "code": "MSBJ-002",
+      "name": "レガシィ"
+    },
+    {
+      "code": "MSBJ-003",
+      "name": "レヴォーグ"
+    },
+    {
+      "code": "MSBJ-004",
+      "name": "XV"
+    },
+    {
+      "code": "MSBJ-005",
+      "name": "サンバー"
+    }
+  ],
+  "MMIJ": [
+    {
+      "code": "MMIJ-000",
+      "name": "デリカD:5"
+    },
+    {
+      "code": "MMIJ-001",
+      "name": "アウトランダー"
+    },
+    {
+      "code": "MMIJ-002",
+      "name": "eKワゴン"
+    },
+    {
+      "code": "MMIJ-003",
+      "name": "パジェロ"
+    },
+    {
+      "code": "MMIJ-004",
+      "name": "RVR"
+    }
+  ],
+  "MLEJ": [
+    {
+      "code": "MLEJ-000",
+      "name": "NX"
+    },
+    {
+      "code": "MLEJ-001",
+      "name": "RX"
+    },
+    {
+      "code": "MLEJ-002",
+      "name": "IS"
+    },
+    {
+      "code": "MLEJ-003",
+      "name": "UX"
+    },
+    {
+      "code": "MLEJ-004",
+      "name": "LS"
+    },
+    {
+      "code": "MLEJ-005",
+      "name": "CT"
+    },
+    {
+      "code": "MLEJ-006",
+      "name": "LX"
+    }
+  ],
+  "MISJ": [
+    { "code": "MISJ-000", "name": "エルフ" },
+    { "code": "MISJ-001", "name": "フォワード" },
+    { "code": "MISJ-002", "name": "ギガ" },
+    { "code": "MISJ-003", "name": "コモ" }
+  ],
+  "MMEG": [
+    { "code": "MMEG-000", "name": "Aクラス" },
+    { "code": "MMEG-001", "name": "Cクラス" },
+    { "code": "MMEG-002", "name": "Eクラス" },
+    { "code": "MMEG-003", "name": "GLA" },
+    { "code": "MMEG-004", "name": "GLC" },
+    { "code": "MMEG-005", "name": "Gクラス" }
+  ],
+  "MVWG": [
+    { "code": "MVWG-000", "name": "ゴルフ" },
+    { "code": "MVWG-001", "name": "ポロ" },
+    { "code": "MVWG-002", "name": "ティグアン" },
+    { "code": "MVWG-003", "name": "T-Cross" },
+    { "code": "MVWG-004", "name": "ザ・ビートル" }
+  ],
+  "MBMG": [
+    { "code": "MBMG-000", "name": "1シリーズ" },
+    { "code": "MBMG-001", "name": "3シリーズ" },
+    { "code": "MBMG-002", "name": "5シリーズ" },
+    { "code": "MBMG-003", "name": "X1" },
+    { "code": "MBMG-004", "name": "X3" },
+    { "code": "MBMG-005", "name": "X5" }
+  ],
+  "MADG": [
+    { "code": "MADG-000", "name": "A1" },
+    { "code": "MADG-001", "name": "A3" },
+    { "code": "MADG-002", "name": "A4" },
+    { "code": "MADG-003", "name": "Q2" },
+    { "code": "MADG-004", "name": "Q3" },
+    { "code": "MADG-005", "name": "Q5" }
+  ],
+  "MPOG": [
+    { "code": "MPOG-000", "name": "911" },
+    { "code": "MPOG-001", "name": "ケイマン" },
+    { "code": "MPOG-002", "name": "ボクスター" },
+    { "code": "MPOG-003", "name": "マカン" },
+    { "code": "MPOG-004", "name": "カイエン" },
+    { "code": "MPOG-005", "name": "パナメーラ" }
+  ],
+  "MMNG": [
+    { "code": "MMNG-000", "name": "ミニ" },
+    { "code": "MMNG-001", "name": "ミニクラブマン" },
+    { "code": "MMNG-002", "name": "ミニクロスオーバー" },
+    { "code": "MMNG-003", "name": "ミニコンバーチブル" }
+  ],
+  "MVOS": [
+    { "code": "MVOS-000", "name": "V40" },
+    { "code": "MVOS-001", "name": "V60" },
+    { "code": "MVOS-002", "name": "XC40" },
+    { "code": "MVOS-003", "name": "XC60" },
+    { "code": "MVOS-004", "name": "XC90" }
+  ],
+  "MPEF": [
+    { "code": "MPEF-000", "name": "208" },
+    { "code": "MPEF-001", "name": "308" },
+    { "code": "MPEF-002", "name": "2008" },
+    { "code": "MPEF-003", "name": "3008" },
+    { "code": "MPEF-004", "name": "5008" }
+  ],
+  "MFTI": [
+    { "code": "MFTI-000", "name": "500" },
+    { "code": "MFTI-001", "name": "500X" },
+    { "code": "MFTI-002", "name": "パンダ" },
+    { "code": "MFTI-003", "name": "アバルト500" }
+  ],
+  "MTSU": [
+    { "code": "MTSU-000", "name": "モデル3" },
+    { "code": "MTSU-001", "name": "モデルY" },
+    { "code": "MTSU-002", "name": "モデルS" },
+    { "code": "MTSU-003", "name": "モデルX" }
+  ]
+}

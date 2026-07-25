@@ -13,9 +13,6 @@
 # database
 *.db
 *.db-journal
-/prisma/dev.db
-/prisma/dev.db-journal
-
 # env
 .env
 .env*.local
