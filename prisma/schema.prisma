@@ -1,0 +1,83 @@
+// Prisma schema for the SELL AND TRADE (セルトレ) clone.
+// Uses SQLite so the project runs with zero external DB setup.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Car manufacturers (メーカー). `code` mirrors the codes used on the real site
+// (e.g. MTOJ = トヨタ, MNIJ = 日産).
+model Maker {
+  id        Int        @id @default(autoincrement())
+  code      String     @unique
+  name      String
+  category  String // "domestic" (国産車) | "imported" (輸入車)
+  sortOrder Int        @default(0)
+  models    CarModel[]
+  createdAt DateTime   @default(now())
+}
+
+// Car models (車種) belonging to a maker.
+model CarModel {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique
+  name      String
+  makerId   Int
+  maker     Maker    @relation(fields: [makerId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([makerId])
+}
+
+// Appraisal / buyout requests submitted through the multi-step form.
+// This is the core lead table the real site persists to its database.
+model Inquiry {
+  id           Int      @id @default(autoincrement())
+
+  // Vehicle info (STEP 1)
+  makerCode    String?
+  makerName    String?
+  modelCode    String?
+  modelName    String?
+  year         String? // 年式 label
+  mileage      String? // 走行距離 label
+  carStatus    Int      @default(1) // 1:走行可能 2:走行不可 3:事故車 4:水没車
+  sellingTime  Int      @default(3) // 0:未定 1:1ヶ月以内 3:3ヶ月以内
+
+  // Customer info (STEP 2)
+  lastName     String?
+  firstName    String?
+  prefecture   String?
+  city         String?
+  zipcode      String?
+
+  // Contact info (STEP 3)
+  email        String?
+  tel          String?
+  contactTime  String? // morning | midday | afternoon | night
+
+  // Meta
+  status       String   @default("new") // new | contacted | closed
+  estimateMin  Int?     // 相場価格(万円) 下限
+  estimateMax  Int?     // 相場価格(万円) 上限
+  ipAddress    String?
+  userAgent    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([status])
+}
+
+// Public "recent applications" ticker (全国からお申し込みが続々).
+model Application {
+  id           Int      @id @default(autoincrement())
+  prefecture   String
+  carName      String
+  appliedOn    DateTime @default(now())
+}
