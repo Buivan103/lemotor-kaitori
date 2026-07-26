@@ -10,15 +10,31 @@ export default function WelcomeModal() {
     return () => clearTimeout(t);
   }, []);
 
+  useEffect(() => {
+    if (!open) {
+      document.body.style.overflow = "";
+      return;
+    }
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   if (!open) return null;
+
+  const close = () => setOpen(false);
 
   const goForm = () => {
     setOpen(false);
-    document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
+    document.body.style.overflow = "";
+    requestAnimationFrame(() => {
+      document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
+    });
   };
 
   return (
-    <div className="modal-overlay" onClick={() => setOpen(false)}>
+    <div className="modal-overlay" onClick={close}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__campaign">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -43,7 +59,7 @@ export default function WelcomeModal() {
             乗換を検討中
           </button>
         </div>
-        <button type="button" className="modal__skip" onClick={() => setOpen(false)}>
+        <button type="button" className="modal__skip" onClick={close}>
           提案は必要ない
         </button>
       </div>
