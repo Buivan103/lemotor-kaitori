@@ -2,11 +2,28 @@ import { NextResponse } from "next/server";
 import { digitsOnlyPhone, isValidJapanesePhone } from "@/lib/phone";
 import { isValidEmail, normalizeEmail } from "@/lib/email";
 import { appendInquiryToSheet, buildSheetRow } from "@/lib/google-sheets";
-import { estimateMarketPrice } from "@/lib/estimate";
+import { estimateMarketPrice, estimateCommercialPrice } from "@/lib/estimate";
 import {
+  checkRequestBurst,
   checkInquirySpam,
   recordInquirySpamHit,
 } from "@/lib/anti-spam";
+import {
+  isAllowedOrigin,
+  isJsonContentType,
+  readJsonBody,
+} from "@/lib/request-guard";
+import { allowOnly, cleanText, clampInt, sheetSafe } from "@/lib/sanitize";
+import {
+  COMMERCIAL_CATEGORIES,
+  COMMERCIAL_USAGE,
+  COMMERCIAL_YEARS,
+  YEARS,
+  MILEAGES,
+  PREFECTURES,
+  COLORS,
+  GRADES,
+} from "@/lib/constants";
 
 function newInquiryId() {
   return `LM-${Date.now().toString(36).toUpperCase()}`;
@@ -20,14 +37,130 @@ function clientIp(request) {
   );
 }
 
+function sanitizeBody(raw) {
+  const isCommercial = raw.vehicleKind === "commercial";
+  const colorValues = COLORS.map((c) => c.value);
+
+  return {
+    vehicleKind: isCommercial ? "commercial" : "passenger",
+    makerCode: cleanText(raw.makerCode, 40),
+    makerName: sheetSafe(raw.makerName, 80),
+    modelCode: cleanText(raw.modelCode, 40),
+    modelName: sheetSafe(raw.modelName, 80),
+    commercialCategory: allowOnly(raw.commercialCategory, COMMERCIAL_CATEGORIES),
+    chassisModel: sheetSafe(raw.chassisModel, 60),
+    year: cleanText(raw.year, 20),
+    yearLabel: isCommercial
+      ? allowOnly(raw.yearLabel, COMMERCIAL_YEARS)
+      : allowOnly(raw.yearLabel, YEARS) || cleanText(raw.yearLabel, 40),
+    grade: allowOnly(raw.grade, GRADES) || sheetSafe(raw.grade, 40),
+    mileage: isCommercial
+      ? allowOnly(raw.mileage, COMMERCIAL_USAGE)
+      : allowOnly(raw.mileage, MILEAGES),
+    color: allowOnly(raw.color, colorValues) || cleanText(raw.color, 40),
+    colorLabel: sheetSafe(raw.colorLabel, 40),
+    carStatus: clampInt(raw.carStatus, { min: 1, max: 4, fallback: 1 }),
+    sellingTime: clampInt(raw.sellingTime, { min: 0, max: 5, fallback: 3 }),
+    lastName: sheetSafe(raw.lastName, 40),
+    firstName: sheetSafe(raw.firstName, 40),
+    prefecture: allowOnly(raw.prefecture, PREFECTURES),
+    city: sheetSafe(raw.city, 60),
+    zipcode: cleanText(String(raw.zipcode || "").replace(/[^\d-]/g, ""), 10),
+    email: normalizeEmail(raw.email),
+    tel: cleanText(raw.tel, 20),
+    contactTime: sheetSafe(raw.contactTime, 40),
+    website: typeof raw.website === "string" ? raw.website : "",
+    companyUrl: typeof raw.companyUrl === "string" ? raw.companyUrl : "",
+    _startedAt: raw._startedAt,
+    welcomeIntent: allowOnly(raw.welcomeIntent, [
+      "不要な車がある",
+      "乗換を検討中",
+      "提案は必要ない",
+    ]),
+  };
+}
+
+function resolveEstimate(body) {
+  if (body.vehicleKind === "commercial") {
+    return estimateCommercialPrice({
+      commercialCategory: body.commercialCategory,
+      year: body.yearLabel || body.year,
+      mileage: body.mileage,
+    });
+  }
+  return estimateMarketPrice({
+    makerCode: body.makerCode,
+    modelName: body.modelName,
+    year: body.year,
+    mileage: body.mileage,
+    carStatus: Number(body.carStatus ?? 1),
+    grade: body.grade,
+    color: body.color,
+  });
+}
+
 // POST /api/inquiries -> estimate + append lead to Google Sheet
 export async function POST(request) {
   try {
-    const body = await request.json();
     const ip = clientIp(request);
-    const userAgent = request.headers.get("user-agent") || null;
 
-    if (!body.makerCode && !body.makerName) {
+    const burst = checkRequestBurst(ip);
+    if (!burst.ok) {
+      return NextResponse.json({ error: burst.error }, { status: 429 });
+    }
+
+    if (!isJsonContentType(request)) {
+      return NextResponse.json(
+        { error: "不正なリクエストです。" },
+        { status: 415 }
+      );
+    }
+
+    if (!isAllowedOrigin(request)) {
+      return NextResponse.json(
+        { error: "不正なリクエストです。" },
+        { status: 403 }
+      );
+    }
+
+    const parsed = await readJsonBody(request);
+    if (!parsed.ok) {
+      return NextResponse.json(
+        { error: parsed.error },
+        { status: parsed.status }
+      );
+    }
+
+    const body = sanitizeBody(parsed.body);
+    const userAgent = cleanText(request.headers.get("user-agent") || "", 300);
+    const isCommercial = body.vehicleKind === "commercial";
+
+    if (isCommercial) {
+      if (!body.commercialCategory) {
+        return NextResponse.json(
+          { error: "車種を選択してください" },
+          { status: 422 }
+        );
+      }
+      if (!body.year && !body.yearLabel) {
+        return NextResponse.json(
+          { error: "年式を選択してください" },
+          { status: 422 }
+        );
+      }
+      if (!body.mileage) {
+        return NextResponse.json(
+          { error: "走行距離 / 稼働時間を選択してください" },
+          { status: 422 }
+        );
+      }
+      if (!body.prefecture) {
+        return NextResponse.json(
+          { error: "都道府県を選択してください" },
+          { status: 422 }
+        );
+      }
+    } else if (!body.makerCode && !body.makerName) {
       return NextResponse.json(
         { error: "メーカーを選択してください" },
         { status: 422 }
@@ -48,27 +181,20 @@ export async function POST(request) {
       );
     }
 
-    const email = normalizeEmail(body.email);
+    const email = body.email;
     const tel = digitsOnlyPhone(body.tel);
-    body.email = email;
 
-    // Honeypot: bots that fill hidden "website" — pretend OK, do not write Sheet.
+    // Honeypot / rate / timing — bots get fake OK; humans get 429.
     const spam = checkInquirySpam({
       ip,
       tel,
-      honeypot: body.website ?? body.companyUrl ?? "",
+      email,
+      honeypot: body.website || body.companyUrl || "",
+      startedAt: body._startedAt,
     });
     if (!spam.ok) {
-      if (spam.reason === "honeypot") {
-        const { min, max } = estimateMarketPrice({
-          makerCode: body.makerCode,
-          modelName: body.modelName,
-          year: body.year,
-          mileage: body.mileage,
-          carStatus: Number(body.carStatus ?? 1),
-          grade: body.grade,
-          color: body.color,
-        });
+      if (spam.reason === "honeypot" || spam.reason === "timing") {
+        const { min, max } = resolveEstimate(body);
         return NextResponse.json(
           {
             ok: true,
@@ -82,18 +208,8 @@ export async function POST(request) {
       return NextResponse.json({ error: spam.error }, { status: 429 });
     }
 
-    const carStatus = Number(body.carStatus ?? 1);
-
-    const { min, max } = estimateMarketPrice({
-      makerCode: body.makerCode,
-      modelName: body.modelName,
-      year: body.year,
-      mileage: body.mileage,
-      carStatus,
-      grade: body.grade,
-      color: body.color,
-    });
-
+    const carStatus = body.carStatus;
+    const { min, max } = resolveEstimate(body);
     const id = newInquiryId();
 
     const row = buildSheetRow({
@@ -122,7 +238,7 @@ export async function POST(request) {
       );
     }
 
-    recordInquirySpamHit({ ip, tel });
+    recordInquirySpamHit({ ip, tel, email });
 
     return NextResponse.json(
       {
@@ -142,12 +258,7 @@ export async function POST(request) {
   }
 }
 
-// GET /api/inquiries -> leads live in Google Sheet (no local list)
+// GET /api/inquiries — do not expose leads
 export async function GET() {
-  return NextResponse.json({
-    count: 0,
-    inquiries: [],
-    message:
-      "査定依頼は Google スプレッドシートで管理します。GOOGLE_SHEETS_WEBHOOK_URL を設定してください。",
-  });
+  return NextResponse.json({ error: "Method Not Allowed" }, { status: 405 });
 }

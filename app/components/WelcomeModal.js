@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
 
+const STORAGE_KEY = "lm_welcome_intent";
+
 export default function WelcomeModal() {
   const [open, setOpen] = useState(false);
 
@@ -19,9 +21,21 @@ export default function WelcomeModal() {
 
   if (!open) return null;
 
-  const close = () => setOpen(false);
+  const saveIntent = (intent) => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, intent);
+    } catch {
+      /* ignore */
+    }
+  };
 
-  const goForm = () => {
+  const close = () => {
+    saveIntent("提案は必要ない");
+    setOpen(false);
+  };
+
+  const goForm = (intent) => {
+    saveIntent(intent);
     setOpen(false);
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
@@ -35,7 +49,10 @@ export default function WelcomeModal() {
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__campaign">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/assets/campaign/lemotor_cashback.png" alt="対象者全員 キャッシュバック2,000円分がもらえる！ Le Motorからの申込限定" />
+          <img
+            src="/assets/campaign/lemotor_cashback.png"
+            alt="対象者全員 キャッシュバック2,000円分がもらえる！ Le Motorからの申込限定"
+          />
         </div>
         <div className="modal__body">
           <div className="modal__operator">
@@ -49,10 +66,18 @@ export default function WelcomeModal() {
           </div>
         </div>
         <div className="modal__buttons">
-          <button type="button" className="modal__btn" onClick={goForm}>
+          <button
+            type="button"
+            className="modal__btn"
+            onClick={() => goForm("不要な車がある")}
+          >
             不要な車がある
           </button>
-          <button type="button" className="modal__btn" onClick={goForm}>
+          <button
+            type="button"
+            className="modal__btn"
+            onClick={() => goForm("乗換を検討中")}
+          >
             乗換を検討中
           </button>
         </div>
@@ -62,4 +87,12 @@ export default function WelcomeModal() {
       </div>
     </div>
   );
+}
+
+export function readWelcomeIntent() {
+  try {
+    return sessionStorage.getItem(STORAGE_KEY) || "";
+  } catch {
+    return "";
+  }
 }

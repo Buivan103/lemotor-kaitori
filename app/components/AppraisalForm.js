@@ -9,16 +9,24 @@ import {
   PREFECTURE_REGIONS,
   GRADES,
   COLORS,
+  COMMERCIAL_CATEGORIES,
+  COMMERCIAL_USAGE,
+  COMMERCIAL_YEARS,
+  PREFECTURES,
 } from "@/lib/constants";
 import { isValidJapanesePhone, normalizeJapanesePhone } from "@/lib/phone";
 import { isValidEmail, normalizeEmail } from "@/lib/email";
 import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
+import { readWelcomeIntent } from "./WelcomeModal";
 
 const empty = {
+  vehicleKind: "passenger", // passenger | commercial
   makerCode: "",
   makerName: "",
   modelCode: "",
   modelName: "",
+  commercialCategory: "",
+  chassisModel: "",
   year: "",
   yearLabel: "",
   grade: "",
@@ -36,6 +44,8 @@ const empty = {
   tel: "",
   contactTime: "",
   website: "", // honeypot — must stay empty
+  _startedAt: 0, // anti-bot timing token (set on mount)
+  welcomeIntent: "", // from WelcomeModal: 不要な車がある | 乗換を検討中 | 提案は必要ない
 };
 
 const WIZARD_STEPS = ["maker", "model", "year", "grade", "mileage", "color"];
@@ -46,6 +56,14 @@ const WIZARD_TITLES = {
   grade: "グレードを選択",
   mileage: "走行距離を選択",
   color: "車体色を選択",
+};
+
+const COMMERCIAL_WIZARD_STEPS = ["category", "year", "usage", "pref"];
+const COMMERCIAL_WIZARD_TITLES = {
+  category: "車種を選択",
+  year: "年式を選択",
+  usage: "走行距離 / 稼働時間を選択",
+  pref: "都道府県を選択",
 };
 
 /** Full-screen step-by-step car picker (sell.tc-v.com mobile #form-car). */
@@ -303,6 +321,150 @@ function CarWizard({
   );
 }
 
+/** Full-screen commercial vehicle picker (same UX as passenger CarWizard). */
+function CommercialWizard({
+  open,
+  step,
+  onClose,
+  onBack,
+  form,
+  onPickCategory,
+  onPickYear,
+  onPickUsage,
+  onPickPref,
+}) {
+  useEffect(() => {
+    if (!open) return;
+    lockPageScroll();
+    return () => unlockPageScroll();
+  }, [open]);
+
+  if (!open) return null;
+
+  const title = COMMERCIAL_WIZARD_TITLES[step] || "";
+  const canBack = step !== "category";
+
+  return (
+    <div className="picker-modal" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="picker-modal__header">
+        {canBack && (
+          <button type="button" className="picker-modal__back" onClick={onBack} aria-label="戻る">
+            ‹
+          </button>
+        )}
+        <div className="picker-modal__title">{title}</div>
+        <button type="button" className="picker-modal__close" onClick={onClose} aria-label="閉じる">
+          ×
+        </button>
+      </div>
+      <div className="picker-modal__body">
+        {step === "category" && (
+          <div className="picker-section">
+            <ul className="picker-list">
+              {COMMERCIAL_CATEGORIES.map((c) => (
+                <li key={c}>
+                  <button
+                    type="button"
+                    className={
+                      "picker-list__item" +
+                      (form.commercialCategory === c ? " is-selected" : "")
+                    }
+                    onClick={() => onPickCategory(c)}
+                  >
+                    <span>{c}</span>
+                    {form.commercialCategory === c && (
+                      <span className="picker-list__check" aria-hidden>✓</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {step === "year" && (
+          <div className="picker-section">
+            <ul className="picker-list">
+              {COMMERCIAL_YEARS.map((y) => (
+                <li key={y}>
+                  <button
+                    type="button"
+                    className={
+                      "picker-list__item" + (form.yearLabel === y ? " is-selected" : "")
+                    }
+                    onClick={() => onPickYear(y)}
+                  >
+                    <span>{y}</span>
+                    {form.yearLabel === y && (
+                      <span className="picker-list__check" aria-hidden>✓</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {step === "usage" && (
+          <div className="picker-section">
+            <div className="picker-section__title">
+              走行距離または稼働時間
+              <span className="picker-section__note"> 近いものを選んでください</span>
+            </div>
+            <ul className="picker-list">
+              {COMMERCIAL_USAGE.map((u) => (
+                <li key={u}>
+                  <button
+                    type="button"
+                    className={
+                      "picker-list__item" + (form.mileage === u ? " is-selected" : "")
+                    }
+                    onClick={() => onPickUsage(u)}
+                  >
+                    <span>{u}</span>
+                    {form.mileage === u && (
+                      <span className="picker-list__check" aria-hidden>✓</span>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {step === "pref" && (
+          <div className="picker-section">
+            {PREFECTURE_REGIONS.map((region) => (
+              <div key={region.title}>
+                <div className="picker-section__title">{region.title}</div>
+                <ul className="picker-list">
+                  {region.items.map((p) => (
+                    <li key={p}>
+                      <button
+                        type="button"
+                        className={
+                          "picker-list__item" +
+                          (form.prefecture === p ? " is-selected" : "")
+                        }
+                        onClick={() => onPickPref(p)}
+                      >
+                        <span>{p}</span>
+                        {form.prefecture === p && (
+                          <span className="picker-list__check" aria-hidden>✓</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function PickerTrigger({ value, placeholder = "選択してください", disabled, onClick }) {
   return (
     <button
@@ -322,7 +484,10 @@ function PickerTrigger({ value, placeholder = "選択してください", disabl
 
 export default function AppraisalForm() {
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(() => ({
+    ...empty,
+    _startedAt: Date.now(),
+  }));
   const [makers, setMakers] = useState({ domestic: [], imported: [] });
   const [models, setModels] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -330,6 +495,7 @@ export default function AppraisalForm() {
   const resultRef = useRef(null);
   const [error, setError] = useState("");
   const [wizardStep, setWizardStep] = useState(null);
+  const [commercialWizardStep, setCommercialWizardStep] = useState(null);
   const [otherDomesticOpen, setOtherDomesticOpen] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [addressMode, setAddressMode] = useState("prefCity"); // prefCity | zip
@@ -363,6 +529,19 @@ export default function AppraisalForm() {
   }, [addressPicker, contactOpen]);
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
+  const isCommercial = form.vehicleKind === "commercial";
+
+  const switchVehicleKind = (kind) => {
+    if (kind === form.vehicleKind) return;
+    setForm({ ...empty, vehicleKind: kind, _startedAt: Date.now() });
+    setStep(1);
+    setWizardStep(null);
+    setCommercialWizardStep(null);
+    setContactOpen(false);
+    setAddressPicker(null);
+    setModels([]);
+    setError("");
+  };
 
   const carBasicsDone = Boolean(
     form.makerCode &&
@@ -372,23 +551,70 @@ export default function AppraisalForm() {
       form.mileage &&
       form.color
   );
-  const step1Valid =
-    carBasicsDone &&
-    form.lastName &&
-    form.firstName &&
-    form.prefecture &&
-    form.city;
+  const commercialBasicsDone = Boolean(
+    form.commercialCategory && form.yearLabel && form.mileage && form.prefecture
+  );
+  const step1Valid = isCommercial
+    ? commercialBasicsDone && form.lastName && form.firstName
+    : carBasicsDone &&
+      form.lastName &&
+      form.firstName &&
+      form.prefecture &&
+      form.city;
   const telValid = isValidJapanesePhone(form.tel);
   const emailValid = isValidEmail(form.email);
   const step2Valid = Boolean(emailValid && telValid);
 
-  const carLabel = form.modelName || form.makerName || "愛車";
+  const carLabel = isCommercial
+    ? form.commercialCategory || form.modelName || "車両"
+    : form.modelName || form.makerName || "愛車";
+  const resultTitle = isCommercial
+    ? [form.commercialCategory, form.makerName, form.modelName]
+        .filter(Boolean)
+        .join(" ")
+    : `${form.makerName} ${form.modelName}`.trim();
   const makerModelLabel =
     form.makerName && form.modelName
       ? `${form.makerName} ${form.modelName}`
       : form.makerName || "";
 
   const openWizard = (at = "maker") => setWizardStep(at);
+  const openCommercialWizard = (at = "category") => setCommercialWizardStep(at);
+
+  const commercialWizardBack = () => {
+    const idx = COMMERCIAL_WIZARD_STEPS.indexOf(commercialWizardStep);
+    if (idx <= 0) setCommercialWizardStep(null);
+    else setCommercialWizardStep(COMMERCIAL_WIZARD_STEPS[idx - 1]);
+  };
+
+  const onPickCommercialCategory = (commercialCategory) => {
+    set({
+      commercialCategory,
+      year: "",
+      yearLabel: "",
+      mileage: "",
+      prefecture: "",
+      city: "",
+      zipcode: "",
+    });
+    setCommercialWizardStep("year");
+  };
+
+  const onPickCommercialYear = (label) => {
+    const y = label.match(/(19|20)\d{2}/)?.[0] || "";
+    set({ yearLabel: label, year: y, mileage: "", prefecture: "", city: "", zipcode: "" });
+    setCommercialWizardStep("usage");
+  };
+
+  const onPickCommercialUsage = (mileage) => {
+    set({ mileage, prefecture: "", city: "", zipcode: "" });
+    setCommercialWizardStep("pref");
+  };
+
+  const onPickCommercialPref = (prefecture) => {
+    set({ prefecture, city: "", zipcode: "" });
+    setCommercialWizardStep(null);
+  };
 
   const prefCityLabel =
     form.prefecture && form.city
@@ -518,10 +744,14 @@ export default function AppraisalForm() {
     setSubmitting(true);
     setError("");
     try {
+      const payload = {
+        ...form,
+        welcomeIntent: form.welcomeIntent || readWelcomeIntent(),
+      };
       const res = await fetch("/api/inquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -560,10 +790,14 @@ export default function AppraisalForm() {
 
         <div className="result__card">
           <p className="result__car">
-            {form.makerName} {form.modelName}
+            {resultTitle}
             {form.yearLabel ? `（${form.yearLabel}）` : ""}
           </p>
-          <p className="result__label">＼ あなたの愛車の相場価格 ／</p>
+          <p className="result__label">
+            {isCommercial
+              ? "＼ あなたの車両の相場価格 ／"
+              : "＼ あなたの愛車の相場価格 ／"}
+          </p>
           <p className="result__price">
             <b>{result.estimate.min}</b>
             <span className="result__tilde">〜</span>
@@ -577,6 +811,70 @@ export default function AppraisalForm() {
 
         <p className="result__lead">担当より順次ご連絡いたします。</p>
 
+        {isCommercial && (
+          <div className="result__line">
+            <p className="result__line-badge">法人・トラックのご相談</p>
+            <h3 className="result__line-title">LINEでお問い合わせ</h3>
+            <p className="result__line-text">
+              QRから友だち追加のうえ、車両写真をお送りください。
+              <br />
+              担当よりご案内いたします。
+            </p>
+
+            <div className="result__line-samples">
+              <p className="result__line-samples-label">お送りいただきたい写真の例</p>
+              <ul className="result__line-samples-grid">
+                {[
+                  {
+                    src: "/assets/line/samples/sample-2444.jpg",
+                    label: "車両全体",
+                    alt: "車両全体の写真例",
+                  },
+                  {
+                    src: "/assets/line/samples/sample-2445.jpg",
+                    label: "メーター",
+                    alt: "メーター（稼働時間）の写真例",
+                  },
+                  {
+                    src: "/assets/line/samples/sample-2446.jpg",
+                    label: "仕様表",
+                    alt: "仕様表・型式の写真例",
+                  },
+                ].map((item) => (
+                  <li key={item.src} className="result__line-sample">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.src} alt={item.alt} width={280} height={210} loading="lazy" />
+                    <span>{item.label}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="result__line-qr-block">
+              <div className="result__line-qr-wrap">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  className="result__line-qr"
+                  src="/assets/line/qr-code.jpg"
+                  alt="LINE友だち追加用QRコード"
+                  width={160}
+                  height={160}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    const ph = e.currentTarget.nextElementSibling;
+                    if (ph) ph.hidden = false;
+                  }}
+                />
+                <div className="result__line-qr-ph" hidden>
+                  <span>LINE</span>
+                  <small>QRコード準備中</small>
+                </div>
+              </div>
+              <p className="result__line-hint">スマホでQRをスキャン → 友だち追加</p>
+            </div>
+          </div>
+        )}
+
         <a className="result__call" href="tel:09091563524">
           <span className="result__call-label">お急ぎの方はお電話ください</span>
           <span className="result__call-number">📞 090-9156-3524</span>
@@ -586,7 +884,11 @@ export default function AppraisalForm() {
           type="button"
           className="btn-back"
           onClick={() => {
-            setForm(empty);
+            setForm({
+              ...empty,
+              vehicleKind: form.vehicleKind || "passenger",
+              _startedAt: Date.now(),
+            });
             setStep(1);
             setContactOpen(false);
             setResult(null);
@@ -607,15 +909,280 @@ export default function AppraisalForm() {
 
   return (
     <div>
+      <div className="form-tabs" role="tablist" aria-label="査定車両の種類">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={!isCommercial}
+          className={"form-tab" + (!isCommercial ? " is-active" : "")}
+          onClick={() => switchVehicleKind("passenger")}
+        >
+          乗用車
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={isCommercial}
+          className={"form-tab" + (isCommercial ? " is-active" : "")}
+          onClick={() => switchVehicleKind("commercial")}
+        >
+          トラック・重機
+        </button>
+      </div>
+
       <div className="chat-operator">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img className="chat-operator__img" src="/assets/icons/image_nav.png" alt="" />
         <div className="chat-operator__text">
-          29秒で入力完了！愛車の査定、承ります。
+          {isCommercial
+            ? "トラック・重機も無料査定！相場をお伝えします。"
+            : "29秒で入力完了！愛車の査定、承ります。"}
         </div>
       </div>
 
-      {step === 1 && (
+      {step === 1 && isCommercial && (
+        <>
+          <div className="form-row">
+            <div className="form-label">
+              車種
+              <span className={"req" + (form.commercialCategory ? " ok" : "")}>
+                {form.commercialCategory ? "OK" : "必須"}
+              </span>
+            </div>
+            <select
+              className="control control--desktop"
+              value={form.commercialCategory}
+              onChange={(e) =>
+                set({
+                  commercialCategory: e.target.value,
+                  year: "",
+                  yearLabel: "",
+                  mileage: "",
+                  prefecture: "",
+                  city: "",
+                  zipcode: "",
+                })
+              }
+            >
+              <option value="">選択してください</option>
+              {COMMERCIAL_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <PickerTrigger
+              value={form.commercialCategory}
+              onClick={() => openCommercialWizard("category")}
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              年式
+              <span className={"req" + (form.yearLabel ? " ok" : "")}>
+                {form.yearLabel ? "OK" : "必須"}
+              </span>
+            </div>
+            <select
+              className="control control--desktop"
+              value={form.yearLabel}
+              disabled={!form.commercialCategory}
+              onChange={(e) => {
+                const label = e.target.value;
+                const y = label.match(/(19|20)\d{2}/)?.[0] || "";
+                set({
+                  yearLabel: label,
+                  year: y,
+                  mileage: "",
+                  prefecture: "",
+                  city: "",
+                  zipcode: "",
+                });
+              }}
+            >
+              <option value="">選択してください</option>
+              {COMMERCIAL_YEARS.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+            <PickerTrigger
+              value={form.yearLabel}
+              disabled={!form.commercialCategory}
+              onClick={() =>
+                openCommercialWizard(form.commercialCategory ? "year" : "category")
+              }
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              走行距離 / 稼働時間
+              <span className={"req" + (form.mileage ? " ok" : "")}>
+                {form.mileage ? "OK" : "必須"}
+              </span>
+            </div>
+            <select
+              className="control control--desktop"
+              value={form.mileage}
+              disabled={!form.yearLabel}
+              onChange={(e) =>
+                set({
+                  mileage: e.target.value,
+                  prefecture: "",
+                  city: "",
+                  zipcode: "",
+                })
+              }
+            >
+              <option value="">選択してください</option>
+              {COMMERCIAL_USAGE.map((u) => (
+                <option key={u} value={u}>
+                  {u}
+                </option>
+              ))}
+            </select>
+            <PickerTrigger
+              value={form.mileage}
+              disabled={!form.yearLabel}
+              onClick={() =>
+                openCommercialWizard(form.yearLabel ? "usage" : "category")
+              }
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              都道府県
+              <span className={"req" + (form.prefecture ? " ok" : "")}>
+                {form.prefecture ? "OK" : "必須"}
+              </span>
+            </div>
+            <select
+              className="control control--desktop"
+              value={form.prefecture}
+              disabled={!form.mileage}
+              onChange={(e) =>
+                set({ prefecture: e.target.value, city: "", zipcode: "" })
+              }
+            >
+              <option value="">選択してください</option>
+              {PREFECTURES.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+            <PickerTrigger
+              value={form.prefecture}
+              disabled={!form.mileage}
+              onClick={() =>
+                openCommercialWizard(form.mileage ? "pref" : "category")
+              }
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              メーカー・車名 <span className="req soft">任意</span>
+            </div>
+            <input
+              className="control"
+              placeholder="例: いすゞ エルフ / 日野 レンジャー"
+              value={form.makerName}
+              onChange={(e) => set({ makerName: e.target.value })}
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              型式 <span className="req soft">任意</span>
+            </div>
+            <input
+              className="control"
+              placeholder="例: NKR85"
+              value={form.chassisModel}
+              onChange={(e) => set({ chassisModel: e.target.value })}
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              お名前
+              <span className={"req" + (form.lastName && form.firstName ? " ok" : "")}>
+                {form.lastName && form.firstName ? "OK" : "必須"}
+              </span>
+            </div>
+            <div className="name-row">
+              <span>姓</span>
+              <input
+                className="control"
+                placeholder="セイ"
+                value={form.lastName}
+                onChange={(e) => set({ lastName: e.target.value })}
+              />
+              <span>名</span>
+              <input
+                className="control"
+                placeholder="メイ"
+                value={form.firstName}
+                onChange={(e) => set({ firstName: e.target.value })}
+              />
+            </div>
+          </div>
+
+          <div className="form-row">
+            <div className="form-label">
+              売却希望時期 <span className="req ok">OK</span>
+            </div>
+            <div className="radios" role="radiogroup" aria-label="売却希望時期">
+              {SELLING_TIME.map((s) => (
+                <label
+                  key={s.value}
+                  className={"radio" + (form.sellingTime === s.value ? " on" : "")}
+                >
+                  <input
+                    type="radio"
+                    name="selling_time_commercial"
+                    value={s.value}
+                    checked={form.sellingTime === s.value}
+                    onChange={() => set({ sellingTime: s.value })}
+                  />
+                  <span className="radio__text">{s.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              className="btn-submit"
+              disabled={!step1Valid}
+              onClick={() => setContactOpen(true)}
+            >
+              <span className="sub">無料</span>
+              査定額を見る（連絡先へ）
+            </button>
+          </div>
+
+          <CommercialWizard
+            open={Boolean(commercialWizardStep)}
+            step={commercialWizardStep}
+            onClose={() => setCommercialWizardStep(null)}
+            onBack={commercialWizardBack}
+            form={form}
+            onPickCategory={onPickCommercialCategory}
+            onPickYear={onPickCommercialYear}
+            onPickUsage={onPickCommercialUsage}
+            onPickPref={onPickCommercialPref}
+          />
+        </>
+      )}
+
+      {step === 1 && !isCommercial && (
         <>
           {/* ===== Mobile: combined maker/model opens step-by-step wizard ===== */}
           <div className="form-row form-row--mobile-only">

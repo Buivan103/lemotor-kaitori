@@ -11,10 +11,10 @@ function formatDate(d) {
 const PURCHASE = [
   { src: "/assets/icons/purchase01.jpeg", name: "IST" },
   { src: "/assets/icons/purchase02.jpeg", name: "Harrier" },
-  { src: "/assets/icons/purchase03.jpeg", name: "Corolla Axio" },
-  { src: "/assets/icons/purchase04.jpeg", name: "Note" },
-  { src: "/assets/icons/purchase05.jpeg", name: "Vitz" },
   { src: "/assets/icons/purchase06.jpeg", name: "Land Cruiser Prado" },
+  { src: "/assets/icons/purchase-truck.jpg", name: "エルフ（トラック）" },
+  { src: "/assets/icons/purchase-dump.jpg", name: "ダンプ" },
+  { src: "/assets/icons/purchase-excavator.jpg", name: "油圧ショベル" },
 ];
 
 export default async function Home() {
@@ -231,14 +231,17 @@ export default async function Home() {
           <h2>査定実績について</h2>
         </div>
         <div className="container section__body">
-          <p className="section__desc">走行可能な車両の事例での査定額をご紹介</p>
+          <p className="section__desc">
+            乗用車・トラック・重機など、走行可能な車両の査定事例をご紹介
+          </p>
           <div className="results">
             {APPRAISAL_RESULTS.map((r) => (
               <article className="resultcard" key={r.title}>
                 <div className="resultcard__header">
                   <h3>{r.title}</h3>
                   <p className="resultcard__spec">
-                    年式: {r.year} 走行距離: {r.mileage} 本人想定額: {r.expect}
+                    年式: {r.year} {r.distanceLabel || "走行距離"}: {r.mileage}{" "}
+                    本人想定額: {r.expect}
                   </p>
                 </div>
                 <div className="resultcard__price">
@@ -588,6 +591,10 @@ export default async function Home() {
             <div>
               <strong>Le Motor</strong>
               <div>中古車の買取・販売・修理・整備</div>
+              <p className="site-footer__desc">
+                中古トラック（ダンプ、バス、積載車、トレーラー、パッカー車など）の買取にも対応。
+                買取・売却相場のお見積もりもお気軽にご相談ください。
+              </p>
               <a href="tel:09091563524">TEL: 090-9156-3524</a>
               <a href="mailto:lemotor.jp@gmail.com">Email: lemotor.jp@gmail.com</a>
               <a
