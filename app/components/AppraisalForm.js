@@ -12,6 +12,7 @@ import {
 } from "@/lib/constants";
 import { isValidJapanesePhone, normalizeJapanesePhone } from "@/lib/phone";
 import { isValidEmail, normalizeEmail } from "@/lib/email";
+import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
 
 const empty = {
   makerCode: "",
@@ -66,14 +67,9 @@ function CarWizard({
   onPickColor,
 }) {
   useEffect(() => {
-    if (!open) {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (!open) return;
+    lockPageScroll();
+    return () => unlockPageScroll();
   }, [open]);
 
   if (!open) return null;
@@ -361,14 +357,9 @@ export default function AppraisalForm() {
   }, [form.makerCode]);
 
   useEffect(() => {
-    if (!addressPicker && !contactOpen) {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (!addressPicker && !contactOpen) return;
+    lockPageScroll();
+    return () => unlockPageScroll();
   }, [addressPicker, contactOpen]);
 
   const set = (patch) => setForm((f) => ({ ...f, ...patch }));
@@ -541,7 +532,6 @@ export default function AppraisalForm() {
       setContactOpen(false);
       setAddressPicker(null);
       setWizardStep(null);
-      document.body.style.overflow = "";
       setResult(data);
     } catch {
       setError("通信エラーが発生しました。");
@@ -557,8 +547,6 @@ export default function AppraisalForm() {
 
   useEffect(() => {
     if (!result) return;
-    document.body.style.overflow = "";
-    document.documentElement.style.overflow = "";
     const id = window.requestAnimationFrame(() => {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });

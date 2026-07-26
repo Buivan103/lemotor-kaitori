@@ -25,10 +25,9 @@ html {
   width: 100%;
   max-width: 100%;
   background: #333; /* matches topbar — reduces white flash on overscroll */
-}
-html,
-body {
+  /* Single scroll root for desktop Chrome (avoid html+body dual scrollports). */
   overflow-x: hidden;
+  overflow-y: scroll;
 }
 body {
   margin: 0;
@@ -41,8 +40,8 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   position: relative;
-  /* Allow normal page scroll; only suppress chain scroll into the browser chrome */
-  overscroll-behavior-y: none;
+  /* Keep body out of the scrollport chain — html scrolls the page. */
+  overflow: visible;
 }
 a { color: #084f88; text-decoration: none; }
 img { max-width: 100%; display: block; }

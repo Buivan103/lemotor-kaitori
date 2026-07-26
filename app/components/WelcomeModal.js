@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
 
 export default function WelcomeModal() {
   const [open, setOpen] = useState(false);
@@ -11,14 +12,9 @@ export default function WelcomeModal() {
   }, []);
 
   useEffect(() => {
-    if (!open) {
-      document.body.style.overflow = "";
-      return;
-    }
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    if (!open) return;
+    lockPageScroll();
+    return () => unlockPageScroll();
   }, [open]);
 
   if (!open) return null;
@@ -27,9 +23,10 @@ export default function WelcomeModal() {
 
   const goForm = () => {
     setOpen(false);
-    document.body.style.overflow = "";
     requestAnimationFrame(() => {
-      document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
+      requestAnimationFrame(() => {
+        document.getElementById("form")?.scrollIntoView({ behavior: "smooth" });
+      });
     });
   };
 
