@@ -572,7 +572,11 @@ export default async function Home() {
       <footer className="site-footer">
         <div className="container">
           <nav className="site-footer__menu" aria-label="フッターメニュー">
-            <a href="https://lemotor.jp/" target="_blank" rel="noreferrer">
+            <a
+              href="https://www.carsensor.net/shop/saitama/331266001/#contents"
+              target="_blank"
+              rel="noreferrer"
+            >
               会社概要
             </a>
             <a href="#faq-contact">よくある質問・お問合せ</a>
