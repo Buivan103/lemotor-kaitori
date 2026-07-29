@@ -82,7 +82,7 @@ export default async function Home() {
         <div className="assessment-good-deal">
           <span className="assessment-good-deal__line">
             <span className="assessment-good-deal__hl">「想定以上の査定額が出た」</span>
-            の声が続出の一括査定！
+            の声が続出の無料査定！
           </span>
           <br />
           <span className="assessment-good-deal__line">
@@ -94,9 +94,9 @@ export default async function Home() {
           <div className="good-deal-block">
             <div className="d-flex justify-content-center fs-14">
               <div className="good-deal-block__content">
-                一括査定なら
+                Le Motorなら
                 <br />
-                <span className="red-notice">平均12万円もお得！</span>
+                <span className="red-notice">丁寧に直接査定！</span>
               </div>
               <div className="good-deal-block__content">
                 申し込み後すぐに
@@ -111,7 +111,7 @@ export default async function Home() {
               </div>
             </div>
             <div className="good-deal-block__note mb-1">
-              ※2021年9月～2022年3月の平均価格差であり、査定額の保証はできかねます。
+              ※表示の相場は目安であり、査定額の保証はできかねます。
             </div>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default async function Home() {
       <div className="home-hide-on-result">
       <section className="process" id="process">
         <div className="process__header">
-          <h2>「オールインワン査定」で楽々売却！</h2>
+          <h2>「かんたん無料査定」で楽々売却！</h2>
           <p className="process__subtitle">
             不要な手間は一切無し！
             <br className="process__br-mobile" />
@@ -226,84 +226,83 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="section section--cream">
+      <section className="section section--cream" id="results">
         <div className="section-head">
           <h2>査定実績について</h2>
         </div>
         <div className="container section__body">
           <p className="section__desc">
-            乗用車・トラック・重機など、走行可能な車両の査定事例をご紹介
+            Le Motorが直接査定した事例です。想定額と実際の査定額をあわせてご紹介します。
           </p>
           <div className="results">
             {APPRAISAL_RESULTS.map((r) => (
-              <article className="resultcard" key={r.title}>
-                <div className="resultcard__header">
-                  <h3>{r.title}</h3>
-                  <p className="resultcard__spec">
-                    年式: {r.year} {r.distanceLabel || "走行距離"}: {r.mileage}{" "}
-                    本人想定額: {r.expect}
-                  </p>
-                </div>
-                <div className="resultcard__price">
-                  <p className="resultcard__price-title">＼査定に納得！／</p>
-                  <p className="resultcard__price-main">
-                    <span>最安値から</span>
-                    <span className="resultcard__price-num">{r.upAmount}</span>
-                    <span>万円</span>
-                    <span>UP！</span>
-                  </p>
-                </div>
-                <div className="resultcard__mid">
+              <article className="resultcard" key={r.id}>
+                <div className="resultcard__media">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     className="resultcard__car"
                     src={r.image}
                     alt={r.carName}
                   />
-                  <ul className="resultcard__offers">
-                    {r.offers.map((o, i) => (
-                      <li
-                        key={o}
-                        className={
-                          i === 0
-                            ? "resultcard__offer resultcard__offer--top"
-                            : "resultcard__offer"
-                        }
-                      >
-                        {o}
-                      </li>
-                    ))}
-                  </ul>
+                  <span className="resultcard__tag">{r.tag}</span>
                 </div>
-                <div className="resultcard__footer">
-                  <span className="resultcard__avatar" aria-hidden="true">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      width="24"
-                      fill="#666"
-                    >
-                      <path d="M0 0h24v24H0z" fill="none" />
-                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                    </svg>
-                  </span>
-                  <p className="resultcard__review">{r.review}</p>
+
+                <div className="resultcard__body">
+                  <div className="resultcard__meta">
+                    <span className="resultcard__area">{r.area}</span>
+                    <h3>{r.carName}</h3>
+                    <ul className="resultcard__chips" aria-label="車両スペック">
+                      <li>{r.year}</li>
+                      <li>
+                        {r.distanceLabel} {r.mileage}
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="resultcard__compare" aria-label="査定額の比較">
+                    <div className="resultcard__col">
+                      <span className="resultcard__col-label">ご本人の想定</span>
+                      <span className="resultcard__col-value">{r.expect}</span>
+                    </div>
+                    <span className="resultcard__arrow" aria-hidden="true">
+                      →
+                    </span>
+                    <div className="resultcard__col resultcard__col--accent">
+                      <span className="resultcard__col-label">Le Motor査定</span>
+                      <span className="resultcard__col-value">{r.appraise}</span>
+                    </div>
+                  </div>
+
+                  {Number(r.upAmount) > 0 && (
+                    <p className="resultcard__delta">
+                      想定より{" "}
+                      <strong>
+                        {r.upAmount}
+                        <span>万円</span>
+                      </strong>{" "}
+                      UP
+                    </p>
+                  )}
+
+                  <blockquote className="resultcard__quote">
+                    <p>{r.review}</p>
+                    <footer>— {r.reviewer}</footer>
+                  </blockquote>
                 </div>
               </article>
             ))}
           </div>
           <p className="results__note">
-            ※弊社実施アンケート回答からの抜粋となり、条件・状態により実際の価格は異なります。
+            ※金額は一例です。車両の状態・時期により実際の査定額は異なります。
             <br />
-            ※車の画像はイメージとなり、実際の査定車両とは異なります。
+            ※車の画像はイメージです。実際の査定車両とは異なります。
           </p>
         </div>
       </section>
 
       <section className="cta-strip">
         <div className="container">
-          <p>1社だけ見積もるよりお得！比較するだけで高額査定のチャンス</p>
+          <p>無料・簡単入力！Le Motorが直接査定いたします</p>
           <a className="cta-btn" href="#form">
             <small>無料</small>今すぐ査定依頼
           </a>

@@ -1677,7 +1677,7 @@ export default function AppraisalForm() {
       )}
 
       <p className="form-note">
-        お問い合わせ後、ご入力いただいた番号宛に買取業者より査定案内の電話があります。
+        お問い合わせ後、ご入力いただいた番号宛にLe Motorより査定案内の電話があります。
       </p>
 
       <div className="protect">
