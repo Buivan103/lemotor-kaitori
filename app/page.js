@@ -3,9 +3,20 @@ import { APPRAISAL_RESULTS, APPEALS, FAQS } from "@/lib/constants";
 import AppraisalForm from "./components/AppraisalForm";
 import WelcomeModal from "./components/WelcomeModal";
 
+/** Keep お申込み date (= today JST) fresh without full force-dynamic. */
+export const revalidate = 300;
+
 function formatDate(d) {
+  if (!d) return "";
   const dt = new Date(d);
-  return `${String(dt.getMonth() + 1).padStart(2, "0")}/${String(dt.getDate()).padStart(2, "0")}`;
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tokyo",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(dt);
+  const month = parts.find((p) => p.type === "month")?.value || "01";
+  const day = parts.find((p) => p.type === "day")?.value || "01";
+  return `${month}/${day}`;
 }
 
 const PURCHASE = [
